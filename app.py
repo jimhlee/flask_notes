@@ -1,9 +1,9 @@
 import os
 
-from flask import Flask, redirect, render_template
+from flask import Flask, redirect, render_template, session
 
 from models import db, connect_db, User
-from forms import CreateUserForm
+from forms import CreateUserForm, LoginForm
 
 app = Flask(__name__)
 
@@ -36,3 +36,20 @@ def show_and_process_user_form():
 
     else:
         return render_template("user_register_form.html", form=form)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    ''' Logs in user  if successful '''
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        username= form.username.data
+        password= form.password.data
+
+        user = User.authenticate(username, password)
+
+        if user:
+            session['user_id'] = username
+    else:

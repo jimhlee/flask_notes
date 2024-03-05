@@ -12,5 +12,11 @@ class CreateUserForm(FlaskForm):
     last_name = StringField("Last Name", validators=[InputRequired()])
 
 
+class LoginForm(FlaskForm):
+    '''Form for logging in'''
+
+    username = StringField("Username", validators=[InputRequired()])
+    password = StringField("Password", validators=[InputRequired()])
+
 class CSRFProtectForm(FlaskForm):
     """Form just for CSRF protection"""
