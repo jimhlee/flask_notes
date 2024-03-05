@@ -1,8 +1,10 @@
-flask<3
+Flask<3
 Werkzeug<3
-flask-sqlalchemy
+git+https://github.com/pallets-eco/flask-debugtoolbar
+Flask-SQLAlchemy
+Flask-WTF
+flask-bcrypt
 ipython
 psycopg2-binary
-sqlalchemy
 python-dotenv
-
+packaging
