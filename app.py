@@ -3,7 +3,7 @@ import os
 from flask import Flask, redirect, render_template, session, flash
 
 from models import db, connect_db, User
-from forms import CreateUserForm, LoginForm
+from forms import CreateUserForm, LoginForm, CSRFProtectForm
 
 app = Flask(__name__)
 
@@ -27,14 +27,9 @@ def show_and_process_register_user_form():
     """get and process user registration form"""
 
     form = CreateUserForm()
-    username = form.username.data
-
+    # username = form.username.data
 
     if form.validate_on_submit():
-        # session['user_id'] = username
-        # db.session.add(username)
-        # db.session.commit()
-        # return redirect(f"/users/{form.username.data}")
         data = {k: v for k, v in form.data.items() if k != "csrf_token"}
         new_user = User.register(**data)
 
@@ -66,7 +61,31 @@ def login():
     else:
         form.username.errors = ["Bad name/password"]
 
-    # TODO: need to create login html
     return render_template("login.html", form=form)
 
 # user = User.query.get_or_404(user.username)
+
+@app.get("/users/<username>")
+def show_user_info(username):
+    """show user info for logged-in users only"""
+
+    user = User.query.get_or_404(username)
+
+    if session["user_id"] != user.username:
+        flash("You must be logged in to view!")
+        return redirect("/login")
+
+    else:
+        return render_template("user_info.html", user=user)
+
+
+@app.post("/logout")
+def logout_user():
+    """log out user"""
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+        session.pop("user_id", None)
+
+    return redirect("/")
