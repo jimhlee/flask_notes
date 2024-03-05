@@ -52,4 +52,8 @@ def login():
 
         if user:
             session['user_id'] = username
+
     else:
+        form.username.errors = ["Bad name/password"]
+    # TODO: need to create login form
+    return render_template("login.html", form=form)
