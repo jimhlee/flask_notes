@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, redirect, render_template, session
+from flask import Flask, redirect, render_template, session, flash
 
 from models import db, connect_db, User
 from forms import CreateUserForm, LoginForm
@@ -23,17 +23,27 @@ def redirect_to_homepage():
 
 
 @app.route("/register", methods=["GET", "POST"])
-def show_and_process_user_form():
-    """get and process user form"""
+def show_and_process_register_user_form():
+    """get and process user registration form"""
 
-    user = User.query.all()
     form = CreateUserForm()
+    username = form.username.data
+
 
     if form.validate_on_submit():
+        # session['user_id'] = username
+        # db.session.add(username)
+        # db.session.commit()
+        # return redirect(f"/users/{form.username.data}")
+        data = {k: v for k, v in form.data.items() if k != "csrf_token"}
+        new_user = User.register(**data)
 
+        db.session.add(new_user)
+        db.session.commit()
+        session['user_id'] = new_user.username
 
-        return redirect("/users/<username>")
-
+        flash("User added.")
+        return redirect(f"/users/{new_user.username}")
     else:
         return render_template("user_register_form.html", form=form)
 
@@ -49,11 +59,14 @@ def login():
         password= form.password.data
 
         user = User.authenticate(username, password)
-
         if user:
             session['user_id'] = username
+            return redirect('/')
 
     else:
         form.username.errors = ["Bad name/password"]
-    # TODO: need to create login form
+
+    # TODO: need to create login html
     return render_template("login.html", form=form)
+
+# user = User.query.get_or_404(user.username)
