@@ -3,7 +3,7 @@ import os
 from flask import Flask, redirect, render_template, session, flash
 
 from models import db, connect_db, User, Note
-from forms import CreateUserForm, LoginForm, CSRFProtectForm, NewNoteForm
+from forms import CreateUserForm, LoginForm, CSRFProtectForm, NewNoteForm, EditNoteForm
 
 app = Flask(__name__)
 
@@ -30,7 +30,6 @@ def show_and_process_register_user_form():
 
     if form.validate_on_submit():
         data = {k: v for k, v in form.data.items() if k != "csrf_token"}
-        # TODO: emails = User.query(User.email) how to do this?
         new_user = User.register(**data)
         # session add in model(register), session commit in view function
         # provides opportunity to add elsewhere in view function if necessary
@@ -80,8 +79,8 @@ def show_user_info(username):
 
     else:
         user = User.query.get_or_404(username)
+        # user.notes already has the notes, it can be accessed inside the html template
         notes = Note.query.filter(Note.owner_username == username)
-
         return render_template("user_info.html", user=user, notes=notes)
 
 
@@ -104,8 +103,8 @@ def remove_user(username):
     notes = Note.query.filter(Note.owner_username == username)
 
     for note in notes:
-        db.session.delete(notes)
-
+        db.session.delete(note)
+    # first commit is not necessary, handled all in 110
     db.session.commit()
     db.session.delete(username)
     db.session.commit()
@@ -116,20 +115,48 @@ def remove_user(username):
 @app.route("/users/<username>/notes/add", methods=["GET", "POST"])
 def display_notes_form(username):
     """add new note"""
+    # check with session for username here as well before everything else
 
     form = NewNoteForm()
-
     if form.validate_on_submit():
         title = form.title.data
         content = form.content.data
 
-        new_note = Note(title=title, content=content)
+        new_note = Note(title=title, content=content, owner_username=username)
 
         db.session.add(new_note)
         db.session.commit()
-
+        # move below line above validate on submit, no need to actually use value
+        user = User.query.get_or_404(username)
         return redirect(f"/users/{username}")
 
     else:
-        return render_template("notes_add_form.html")
+        return render_template("notes_add_form.html", form=form)
 
+@app.route('/notes/<int:id>/update', methods=['GET', 'POST'])
+def edit_note(id):
+    note = Note.query.get_or_404(id)
+
+    form = EditNoteForm(obj=note)
+
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.content = form.content.data
+
+        db.session.commit()
+
+        return redirect(f'/users/{note.owner_username}')
+    else:
+        render_template('notes_edit_form.html', form=form)
+
+# use int:id below in route
+@app.post('/notes/<id>/delete')
+def delete_post(id):
+    note = Note.query.get_or_404(id)
+    # user = User.query.get_or_404(note.owner_username)
+    # use CSRF protection even here
+    db.session.delete(note)
+    db.session.commit()
+
+    # return redirect(f'/users/{note.owner_username}', user=user)
+    return redirect(f'/users/{note.owner_username}')

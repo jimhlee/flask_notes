@@ -1,3 +1,4 @@
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import InputRequired, Length
@@ -23,6 +24,22 @@ class LoginForm(FlaskForm):
 
     username = StringField("Username", validators=[InputRequired()])
     password = PasswordField("Password", validators=[InputRequired()])
+
+
+
+
+class NewNoteForm(FlaskForm):
+    '''form for adding a note'''
+    title = StringField('title', validators=[InputRequired()])
+    content = StringField('content', validators=[InputRequired()])
+
+# below can just inherit from newnoteform in the params of editnoteform
+# only need docstring
+class EditNoteForm(NewNoteForm):
+    '''Form to edit a note'''
+
+    # title = StringField('title', validators=[InputRequired()])
+    # content = StringField('content', validators=[InputRequired()])
 
 class CSRFProtectForm(FlaskForm):
     """Form just for CSRF protection"""

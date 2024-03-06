@@ -10,8 +10,9 @@
 <p> Email: {{user.email}} </p>
 
 <h2>Notes</h2>
+
 <ul>
-  {% for note in notes %}
+  {% for note in user.notes %}
 
     <li>
       <b>{{note.title}}</b>: {{note.content}}
