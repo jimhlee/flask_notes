@@ -15,6 +15,8 @@ class User(db.Model):
     )
 
     hashed_password = db.Column(
+        # changes in bcrypt functionality mean you should leave this as text
+        # i.e. bcrypt could increase the size of their password
         db.String(100),
         nullable = False
     )
@@ -36,13 +38,13 @@ class User(db.Model):
     )
 
     @classmethod
-    def register(cls, username, pwd, email, first_name, last_name):
+    def register(cls, username, password, email, first_name, last_name):
         """register user w/ hashed password & return user"""
 
-        hashed = bcrypt.generate_password_hash(pwd).decode('utf8')
+        hashed = bcrypt.generate_password_hash(password).decode('utf8')
         return cls(
             username=username,
-            password=hashed,
+            hashed_password=hashed,
             email=email,
             first_name=first_name,
             last_name=last_name
@@ -50,11 +52,11 @@ class User(db.Model):
 
     @classmethod
     def authenticate(cls, username, pwd):
-        """validate that user exists and password is correct"""
+        """validate that user exists and password is correct returns user or boolean"""
 
         u = cls.query.filter_by(username=username).one_or_none()
 
-        if u and bcrypt.check_password_hash(u.password, pwd):
+        if u and bcrypt.check_password_hash(u.hashed_password, pwd):
             return u
         else:
             return False

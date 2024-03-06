@@ -1,9 +1,15 @@
 {% extends 'base.html' %}
-
 {% block title %} Create New User {% endblock %}
 
 {% block content %}
 
+{% if 'user_id' in session %}
+<form action="/logout" method="POST">
+  {{form.hidden_tag()}}
+  <button type="submit" class="btn btn-primary">Logout</button>
+</form>
+
+{% else %}
 <form id="new-user-form" method="POST">
     {{ form.hidden_tag() }} <!--add type=hidden form fields -->
 
@@ -23,5 +29,5 @@
 
     <button type="submit">Submit New User</button>
   </form>
-
+{% endif %}
 {% endblock %}

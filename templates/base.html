@@ -9,23 +9,7 @@
   {% for msg in get_flashed_messages() %}
     <div class="alert alert-info">{{ msg }}</div>
   {% endfor %}
-  <ul>
-    {% if 'user_id' not in session %}
-      <li><a href="/register">Register</a></li>
-      <li><a href="/login">Login</a></li>
-    {% endif %}
 
-    {% if 'user_id' in session %}
-    <!-- the below logout is not functional, it is GET request, and will only timeout -->
-      <li><a href="/logout">Logout</a></li>
-      <li><a href="/secret">Secret</a></li>
-
-      <form action="/logout" method="POST">
-        {{form.hidden_tag()}}
-        <button type="submit" class="btn btn-primary">Logout</button>
-      </form>
-    {% endif %}
-  </ul>
   {% block content %}
 
   {% endblock %}

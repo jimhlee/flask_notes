@@ -13,7 +13,7 @@ app.config['SQLALCHEMY_ECHO'] = True
 app.config['SECRET_KEY'] = "oh-so-secret"
 
 connect_db(app)
-
+db.create_all()
 
 @app.get("/")
 def redirect_to_homepage():
@@ -27,14 +27,18 @@ def show_and_process_register_user_form():
     """get and process user registration form"""
 
     form = CreateUserForm()
-    # username = form.username.data
 
     if form.validate_on_submit():
         data = {k: v for k, v in form.data.items() if k != "csrf_token"}
+        # TODO: emails = User.query(User.email) how to do this?
         new_user = User.register(**data)
-
+        # session add in model(register), session commit in view function
+        # provides opportunity to add elsewhere in view function if necessary
+        # and only commit once. each method should add, view function commits
         db.session.add(new_user)
         db.session.commit()
+        # make user_id a global constant, allows for one change instead of many
+        # changes and prevents typos
         session['user_id'] = new_user.username
 
         flash("User added.")
@@ -45,8 +49,7 @@ def show_and_process_register_user_form():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    ''' Logs in user  if successful '''
-
+    ''' Logs in user if successful and returns login page if unsuccessful '''
     form = LoginForm()
 
     if form.validate_on_submit():
@@ -56,21 +59,23 @@ def login():
         user = User.authenticate(username, password)
         if user:
             session['user_id'] = username
-            return redirect('/')
-
+            # redirect to user/username instead. right now leads to login url instead
+            return render_template('user_info.html', user=user)
+    # else block should be related to if user block above
     else:
         form.username.errors = ["Bad name/password"]
 
     return render_template("login.html", form=form)
 
-# user = User.query.get_or_404(user.username)
 
 @app.get("/users/<username>")
 def show_user_info(username):
     """show user info for logged-in users only"""
-
+    # use the username var passed in on show_user_info instead of querying db
+    # only query db on success
     user = User.query.get_or_404(username)
-
+    # is there a username in the session at all? if not below raises key error
+    # raise error here unauthorized from werkzeug instead of redirected
     if session["user_id"] != user.username:
         flash("You must be logged in to view!")
         return redirect("/login")

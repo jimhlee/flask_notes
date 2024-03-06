@@ -3,6 +3,10 @@
 {% block title %} Login {% endblock %}
 
 {% block content %}
+{% if 'user_id' not in session %}
+<ul>
+      <li><a href="/register">Register</a></li>
+</ul>
 
 <form id="login-user-form" method="POST">
     {{ form.hidden_tag() }} <!--add type=hidden form fields -->
@@ -13,15 +17,23 @@
       <p>
         {{ field.label }}
         {{ field }}
-
+<!--
         {% for error in field.errors %}
           {{ error }}
-        {% endfor %}
+        {% endfor %} -->
       </p>
 
     {% endfor %}
 
     <button type="submit">Login</button>
   </form>
+{% endif %}
+
+{% if 'user_id' in session %}
+<form action="/logout" method="POST">
+  {{form.hidden_tag()}}
+  <button type="submit" class="btn btn-primary">Logout</button>
+</form>
+{% endif %}
 
 {% endblock %}
