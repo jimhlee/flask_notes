@@ -9,5 +9,20 @@
 <p> Username: {{user.username}} </p>
 <p> Email: {{user.email}} </p>
 
+<h2>Notes</h2>
+<ul>
+  {% for note in notes %}
+
+    <li>
+      <b>{{note.title}}</b>: {{note.content}}
+      <a href="/notes/{{note.id}}/update">Edit</a>
+      <a href="/notes/{{note.id}}/delete">Delete</a>
+    </li>
+
+  {% endfor %}
+
+</ul>
+<a href="/users/{{user.username}}/notes/add">Add More Notes!</a>
+<a href="/users/{{user.username}}/delete">Delete EVERYTHING!</a>
 <a href="/">Go back</a>
 {% endblock %}

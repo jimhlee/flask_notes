@@ -2,8 +2,8 @@ import os
 
 from flask import Flask, redirect, render_template, session, flash
 
-from models import db, connect_db, User
-from forms import CreateUserForm, LoginForm, CSRFProtectForm
+from models import db, connect_db, User, Note
+from forms import CreateUserForm, LoginForm, CSRFProtectForm, NewNoteForm
 
 app = Flask(__name__)
 
@@ -71,17 +71,18 @@ def login():
 @app.get("/users/<username>")
 def show_user_info(username):
     """show user info for logged-in users only"""
-    # use the username var passed in on show_user_info instead of querying db
-    # only query db on success
-    user = User.query.get_or_404(username)
+
     # is there a username in the session at all? if not below raises key error
     # raise error here unauthorized from werkzeug instead of redirected
-    if session["user_id"] != user.username:
+    if session["user_id"] != username:
         flash("You must be logged in to view!")
         return redirect("/login")
 
     else:
-        return render_template("user_info.html", user=user)
+        user = User.query.get_or_404(username)
+        notes = Note.query.filter(Note.owner_username == username)
+
+        return render_template("user_info.html", user=user, notes=notes)
 
 
 @app.post("/logout")
@@ -94,3 +95,41 @@ def logout_user():
         session.pop("user_id", None)
 
     return redirect("/")
+
+
+@app.post("/users/<username>/delete")
+def remove_user(username):
+    """delete notes and user, redirect to root route"""
+
+    notes = Note.query.filter(Note.owner_username == username)
+
+    for note in notes:
+        db.session.delete(notes)
+
+    db.session.commit()
+    db.session.delete(username)
+    db.session.commit()
+
+    return redirect("/")
+
+
+@app.route("/users/<username>/notes/add", methods=["GET", "POST"])
+def display_notes_form(username):
+    """add new note"""
+
+    form = NewNoteForm()
+
+    if form.validate_on_submit():
+        title = form.title.data
+        content = form.content.data
+
+        new_note = Note(title=title, content=content)
+
+        db.session.add(new_note)
+        db.session.commit()
+
+        return redirect(f"/users/{username}")
+
+    else:
+        return render_template("notes_add_form.html")
+
